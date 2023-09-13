@@ -1,0 +1,72 @@
+---
+title: "MA615hw1"
+author: "Wenting Chen"
+date: "2023-09-11"
+output: html_document
+---
+
+In this homework I'm analyzing a small subset of the IPUMS dataset.
+I start by loading the packages and the data.
+
+```{r init}
+library(tidyverse)
+library(ggthemes)
+load("~/Desktop/MA615/ma-4615-fa2023-hw-1-coriandercwt/ipums_hw_data.RData")
+ipums_hw_data
+```
+Descriptions for the variables in the data set are given below.
+
+| Variable | Description       |
+|:--------|:-------------------|
+|YEAR     | reports the four-digit year when the household was enumerated or included in the census, the ACS, and the PRCS. |
+|SERIAL   | An identifying number unique to each household record in a given sample. |
+|HHINCOME | Reports the total money income of all household members age 15+ during the previous year. |
+|PERWT    | Indicates how many persons in the U.S. population are represented by a given person in an IPUMS sample. |
+|RACE     | Simple version of race. The concept of race has changed over the more than 150 years represented in IPUMS. Currently, the Census Bureau and others consider race to be a sociopolitical construct, not a scientific or anthropological one. Many detailed categories consist of national origin groups. |
+|RACED    | Detailed version of race.  |
+|POVERTY  | Expresses each family's total income for the previous year as a percentage of the poverty thresholds established by the Social Security Administration. |
+|SPMPOV   | Indicates whether a family is classified as poor according to the Supplemental Poverty Measure (SPM). |
+
+## Question 1
+```{r q1}
+ggplot(ipums_hw_data, aes(x = log(HHINCOME), y = log(POVERTY), color = RACE)) +
+  geom_point(alpha = 0.25) +
+  scale_color_colorblind()
+```
+
+After applying a log transformation, HHINCOME and POVERTY exhibit a clear positive linear relationship.
+
+## Question 2
+```{r q2}
+ggplot(ipums_hw_data, aes(x = HHINCOME, y = RACE, color = RACE)) +
+  geom_point(alpha = 0.25) + scale_color_colorblind() + 
+  geom_boxplot(varwidth = TRUE) +
+  scale_color_discrete(guide = guide_none())
+```
+
+## Question 3
+```{r q3}
+ggplot(ipums_hw_data, aes(x = RACE, fill = SPMPOV, weight = PERWT))+geom_bar(position = "fill") +
+  labs(y = "Proportion") + scale_y_continuous(labels = scales::percent_format()) +
+  theme(axis.text.x = element_text(angle = 15)) + scale_fill_discrete(name=NULL)
+```
+
+geom_bar(position = "fill"): This command creates a bar chart (geom_bar) using the position = "fill" parameter. When position="fill" is set, this means that the height of the bars will be adjusted so that they each represent a proportion of the total for each group, where each bar represents the relative distribution of categories within the group.
+aes(weight = PERWT): This directive means that the height of each bar will be determined by the sum of the PERWT values within each category, which ensures that the bars represent weighted counts or proportions.
+When these two directives are combined, a stacked bar chart is created in which the height of each bar represents the proportion of categories in the group, and this proportion is weighted by the PERWT value. This is a way to visualize the distribution of categorical variables while taking into account the weight of the data.
+
+## Question 4
+```{r q4}
+Raced_mean <- aggregate(HHINCOME ~ RACE + RACED, data = ipums_hw_data, FUN = mean)
+ggplot(ipums_hw_data, aes(x = HHINCOME, y = RACE, color = RACE)) + 
+  geom_point(data = Raced_mean, aes(x = HHINCOME, y = RACE)) + 
+  scale_x_continuous(labels = scales::dollar_format(prefix = "$", suffix = "k", scale = 0.001)) +
+  stat_summary(fun  = "mean", geom = "point", color = "black", size = 4, alpha = 0.35) + 
+  labs(title = "Mean household income by detailed race", subtitle = "Large grey dots are means for simplified race variable", x = "mean household income", y = "") + 
+  scale_color_discrete(guide = guide_none())
+```
+
+What are some important differences between the figures?
+Figure 8 marks the numerical value of mean in the graph, and the numerical value is in percentage, and the bottom of the graph is a horizontal line graph. The maps we plot have more fragmented racial groups, the values are income, and we use a grid map. The most important thing is that Figure 8 is arranged from small to large and from bottom to top according to the mean value, which is clear and readable.
+Are there any issues with the figure the figure above?
+No.
